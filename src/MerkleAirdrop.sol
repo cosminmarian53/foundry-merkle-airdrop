@@ -9,11 +9,14 @@ contract MerkleAirdrop {
     // allow someone in the list to claim the airdrop
 
     error MerkleAirdrop__InvalidProof();
+    error MerkleAirdrop__UserAlreadyClaimed();
+
 
     event Claim(address indexed account, uint256 amount);
     address[] claimers;
     bytes32 private immutable i_merkleRoot;
     IERC20 private immutable i_airdropToken;
+    mapping(address claimer => bool hasClaimed) private s_claimed;
     constructor(bytes32 merkleRoot, IERC20 airdropToken) {
         i_merkleRoot = merkleRoot;
         i_airdropToken = airdropToken;
@@ -24,13 +27,18 @@ contract MerkleAirdrop {
         uint256 amount,
         bytes32[] calldata merkleProof
     ) external {
+        if(s_claimed[account]){
+            revert MerkleAirdrop__UserAlreadyClaimed();
+        }
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encodePacked(account, amount)))
         );
         if (!MerkleProof.verify(merkleProof, i_merkleRoot, leaf)) {
             revert MerkleAirdrop__InvalidProof();
         }
+        s_claimed[account] = true;
         emit Claim(account, amount);
         i_airdropToken.safeTransfer(account, amount);
+
     }
 }
