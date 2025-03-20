@@ -81,7 +81,7 @@ contract MerkleAirdrop is EIP712 {
         if (s_claimed[account]) {
             revert MerkleAirdrop__UserAlreadyClaimed();
         }
-        if (!_isValidSignature(account, getMessage(account, amount), v, r, s)) {
+        if (!_isValidSignature(account, getMessageHash(account, amount), v, r, s)) {
             revert MerkleAirdrop__InvalidSignature();
         }
         bytes32 leaf = keccak256(
@@ -113,7 +113,7 @@ contract MerkleAirdrop is EIP712 {
     function getMerkleRoot() external view returns (bytes32) {
         return i_merkleRoot;
     }
-    function getMessage(
+    function getMessageHash(
         address account,
         uint256 amount
     ) public view returns (bytes32) {
